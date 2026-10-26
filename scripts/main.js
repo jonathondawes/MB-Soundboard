@@ -1,4 +1,4 @@
-import { MODULE_ID, playCue, stopAllLocalCues, broadcastStopAll } from "./audio-engine.js";
+import { MODULE_ID, registerAudioTracking, playCue, stopAllLocalCues, broadcastStopAll } from "./audio-engine.js";
 import { registerHypeTrackerHooks } from "./hype-tracker.js";
 import { SoundboardApp } from "./apps/SoundboardApp.js";
 import { HypeConfigApp } from "./apps/HypeConfigApp.js";
@@ -27,6 +27,7 @@ Hooks.once("init", () => {
     }
   });
 
+  registerAudioTracking();
   registerHypeTrackerHooks();
 });
 

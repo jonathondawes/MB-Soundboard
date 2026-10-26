@@ -22,6 +22,12 @@
     </div>
 
     <div class="mb-toolbar-actions">
+      <button type="button" class="mb-pill {{#if includeGMInWhisper}}active{{/if}}"
+              data-action="toggleGMMonitor"
+              aria-pressed="{{#if includeGMInWhisper}}true{{else}}false{{/if}}"
+              title="Also play selected-player audio on this GM client; All Players and local previews are unaffected">
+        <i class="fa-solid fa-headphones"></i> GM Monitor: {{#if includeGMInWhisper}}On{{else}}Off{{/if}}
+      </button>
       <button type="button" class="mb-btn" data-action="addSound" title="Add Single Sound">
         <i class="fa-solid fa-plus"></i> Add Pad
       </button>

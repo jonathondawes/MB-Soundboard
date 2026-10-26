@@ -14,4 +14,21 @@ A fast, zero-dependency **Foundry VTT (v13 / v14)** module combining the best fe
 - **Toggle Soundboard:** `Shift + B` (or click the grid button under the **Sounds** layer on the left toolbar).
 - **Left-Click Pad:** Play sound to selected recipients.
 - **Right-Click Pad:** Preview locally (GM only).
+- **GM Monitor: On/Off:** Include or exclude your GM client when playing to selected players. Defaults to On for this window. All Players broadcasts and right-click previews are unaffected.
+- **Stop All:** Stop MB Soundboard cues on all connected clients, including received cues and cues still loading. Other Foundry audio is left playing.
 - **Shift + Right-Click Pad:** Delete pad.
+
+
+## Playback fixes
+Zero volume remains silent. Selected-player audio only plays on the GM client when the GM is included, without a duplicate socket echo. After installing an update, reload **every connected client** so all players use the updated audio tracking.
+
+The module marks its audio payloads and wraps `AudioHelper.play` to track those cues on Foundry's native receiving path. Unmarked audio delegates directly to the original helper. Audio still uses Foundry's server-side recipient filtering.
+
+## Validation
+The playback fixes were tested on Foundry **13.351 / PF2e 7.10.1**, including separate GM and player clients. Foundry 14 has not been tested live.
+
+Run the automated routing, volume, stop, pending-load, and unrelated-audio checks with Node.js:
+
+```sh
+node --experimental-vm-modules --test tests/audio-engine.test.mjs
+```
