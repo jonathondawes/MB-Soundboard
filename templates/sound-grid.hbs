@@ -3,11 +3,20 @@
     <div class="mb-sound-grid">
       {{#each sounds}}
         <button type="button"
-                class="mb-sound-pad"
+                class="mb-sound-pad {{#if this.isPool}}is-pool{{/if}} {{#if this.isWebUrl}}is-web{{/if}}"
                 data-action="triggerSound"
                 data-sound-id="{{this.id}}"
-                title="Left-Click: Play | Right-Click: Preview Locally | Shift+Right-Click: Delete">
-          <i class="fa-solid fa-volume-high mb-pad-icon"></i>
+                title="Left-Click: Play | Right-Click: Preview Locally{{#unless this.isWatched}} | Shift+Right-Click: Delete{{/unless}}">
+          <div class="mb-pad-top">
+            {{#if this.isPool}}
+              <i class="fa-solid fa-dice mb-pad-icon" title="Random Pool ({{this.poolCount}} variations)"></i>
+              <span class="mb-pool-badge">{{this.poolCount}}</span>
+            {{else if this.isWebUrl}}
+              <i class="fa-solid fa-globe mb-pad-icon" title="Direct Web URL Stream"></i>
+            {{else}}
+              <i class="fa-solid fa-volume-high mb-pad-icon"></i>
+            {{/if}}
+          </div>
           <span class="mb-pad-label">{{this.name}}</span>
           <span class="mb-pad-cat">{{this.category}}</span>
         </button>
@@ -16,7 +25,7 @@
   {{else}}
     <div class="mb-empty-state">
       <p>No sound pads match the current view.</p>
-      <p class="mb-hint">Click <strong>Add Pad</strong> or <strong>Import Folder</strong> above to populate your soundboard.</p>
+      <p class="mb-hint">Click <strong>Watch Folder</strong> to auto-build boards from subfolders, or use <strong>Add File</strong> / <strong>Add Web URL</strong>.</p>
     </div>
   {{/if}}
 </section>

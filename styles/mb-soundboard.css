@@ -127,4 +127,27 @@
     gap: 0.75rem;
     padding: 0.5rem;
   }
+  .mb-pad-top {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .mb-sound-pad.is-pool {
+    border-color: #7c5295;
+    background: linear-gradient(145deg, #322645, #211a2e);
+  }
+
+  .mb-sound-pad.is-web {
+    border-color: #2e7d67;
+    background: linear-gradient(145deg, #1f3b34, #162924);
+  }
+
+  .mb-pool-badge {
+    font-size: 0.65rem;
+    background: rgba(255, 255, 255, 0.16);
+    padding: 0.05rem 0.35rem;
+    border-radius: 999px;
+    font-weight: 700;
+  }
 }

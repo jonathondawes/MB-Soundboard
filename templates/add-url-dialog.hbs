@@ -1,0 +1,27 @@
+<div class="mb-hype-form">
+  <div class="form-group">
+    <label for="mb-url-name">Pad Name</label>
+    <input id="mb-url-name" type="text" name="name" placeholder="Thunderclap (CDN)" required />
+  </div>
+  <div class="form-group">
+    <label for="mb-url-src">Direct Audio URL (HTTPS)</label>
+    <div class="form-fields">
+      <input id="mb-url-src" type="url" name="src" placeholder="https://example.com/audio/thunder.ogg" required />
+      <button type="button" data-action="previewUrl" title="Preview Stream Locally" aria-label="Preview Stream Locally">
+        <i class="fa-solid fa-play"></i>
+      </button>
+    </div>
+    <p class="notes">Use a direct .ogg, .mp3, .wav, .webm, .flac, or .m4a file on a host that allows browser audio access (CORS). Web pages and video-sharing links will not play.</p>
+  </div>
+  <div class="form-group">
+    <label for="mb-url-category">Category Tab</label>
+    <input id="mb-url-category" type="text" name="category" value="{{defaultCategory}}" placeholder="Web Streams" />
+  </div>
+  <div class="form-group">
+    <label for="mb-url-volume">Volume (0.0 - 1.0)</label>
+    <input id="mb-url-volume" type="number" name="volume" value="{{defaultVolume}}" min="0" max="1" step="0.05" />
+  </div>
+  <footer class="form-footer">
+    <button type="submit"><i class="fa-solid fa-plus"></i> Add Web Pad</button>
+  </footer>
+</div>

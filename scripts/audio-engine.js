@@ -35,28 +35,35 @@ export function registerAudioTracking() {
 
 /**
  * Resolve wildcard audio paths (e.g. "assets/audio/goblin-*.ogg") to a single random file.
- * @param {string} src - File path or wildcard pattern
+ * @param {string|string[]} rawSrc - Local path, web URL, wildcard pattern, or random pool
  * @returns {Promise<string|null>}
  */
-export async function resolveAudioSrc(src) {
-  if (!src || !src.includes("*")) return src;
+export async function resolveAudioSrc(rawSrc) {
+  if (Array.isArray(rawSrc)) {
+    const pool = rawSrc.filter(src => typeof src === "string" && src.trim());
+    return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+  }
+  if (typeof rawSrc !== "string" || !rawSrc.trim()) return null;
+  const src = rawSrc.trim();
+  // A signed web URL can contain a literal *, which must never reach FilePicker.
+  if (/^https?:\/\//i.test(src) || !src.includes("*")) return src;
   try {
-    const browseResult = await foundry.applications.apps.FilePicker.browse("data", src, { wildcard: true });
-    const files = browseResult?.files ?? [];
-    if (files.length === 0) {
+    const result = await foundry.applications.apps.FilePicker.browse("data", src, { wildcard: true });
+    const files = result?.files ?? [];
+    if (!files.length) {
       ui.notifications.warn(`MB Soundboard: No files matched wildcard "${src}"`);
       return null;
     }
     return files[Math.floor(Math.random() * files.length)];
-  } catch (err) {
-    console.error(`${MODULE_ID} | Failed to resolve wildcard path:`, err);
-    return src;
+  } catch (error) {
+    console.error(`${MODULE_ID} | Failed to resolve wildcard path:`, error);
+    return null;
   }
 }
 
 /**
  * Play an audio cue across clients or to targeted players.
- * @param {string} rawSrc - Path or wildcard path to the audio file
+ * @param {string|string[]} rawSrc - Path, web URL, wildcard pattern, or random pool
  * @param {object} options
  * @param {number} [options.volume=0.8] - Playback volume (0.0 to 1.0)
  * @param {string} [options.channel="interface"] - Audio channel ("interface", "environment", "music")

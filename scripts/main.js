@@ -16,6 +16,19 @@ Hooks.once("init", () => {
     default: []
   });
 
+  game.settings.register(MODULE_ID, "watchFolder", {
+    name: "Root Soundboard Watch Folder",
+    hint: "Point to a root audio folder. 1st-level subfolders become Category Tabs; 2nd-level sub-subfolders become randomized sound pool pads.",
+    scope: "world",
+    config: true,
+    type: String,
+    default: "",
+    filePicker: "folder",
+    onChange: () => {
+      if (soundboardInstance?.rendered) soundboardInstance.render({ parts: ["header", "grid"] });
+    }
+  });
+
   game.keybindings.register(MODULE_ID, "openSoundboard", {
     name: "Toggle MB Soundboard",
     hint: "Opens or closes the MB Soundboard window.",

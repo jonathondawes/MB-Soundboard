@@ -28,12 +28,20 @@
               title="Also play selected-player audio on this GM client; All Players and local previews are unaffected">
         <i class="fa-solid fa-headphones"></i> GM Monitor: {{#if includeGMInWhisper}}On{{else}}Off{{/if}}
       </button>
-      <button type="button" class="mb-btn" data-action="addSound" title="Add Single Sound">
-        <i class="fa-solid fa-plus"></i> Add Pad
+      <button type="button" class="mb-btn" data-action="addSound" title="Add Single Local File">
+        <i class="fa-solid fa-plus"></i> Add File
       </button>
-      <button type="button" class="mb-btn" data-action="importFolder" title="Import Folder of Audio">
-        <i class="fa-solid fa-folder-open"></i> Import Folder
+      <button type="button" class="mb-btn" data-action="addWebUrl" title="Add Direct HTTPS Audio Stream URL">
+        <i class="fa-solid fa-link"></i> Add Web URL
       </button>
+      <button type="button" class="mb-btn" data-action="setWatchFolder" title="Set Root Auto-Watch Folder (Subfolders = Categories, Sub-subfolders = Random Pools)">
+        <i class="fa-solid fa-folder-tree"></i> Watch Folder
+      </button>
+      {{#if watchFolder}}
+        <button type="button" class="mb-btn" data-action="rescanWatchFolder" title="Rescan Watch Folder ({{watchFolder}})" aria-label="Rescan Watch Folder">
+          <i class="fa-solid fa-rotate"></i>
+        </button>
+      {{/if}}
       <button type="button" class="mb-btn mb-danger" data-action="stopAll" title="Stop All Active Cues">
         <i class="fa-solid fa-stop"></i> Stop All
       </button>

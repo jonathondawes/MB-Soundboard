@@ -1,4 +1,6 @@
 import { MODULE_ID, playCue, broadcastStopAll } from "../audio-engine.js";
+import { scanSoundboardDirectory } from "../directory-scanner.js";
+import { AddUrlDialog } from "./AddUrlDialog.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -7,6 +9,9 @@ export class SoundboardApp extends HandlebarsApplicationMixin(ApplicationV2) {
   #includeGMInWhisper = true;
   #activeCategory = "All";
   #searchQuery = "";
+  #watchedSoundsCache = null;
+  #cachedWatchFolder = "";
+  #scanPromise = null;
 
   static DEFAULT_OPTIONS = {
     id: "mb-soundboard-app",
@@ -17,7 +22,7 @@ export class SoundboardApp extends HandlebarsApplicationMixin(ApplicationV2) {
       icon: "fa-solid fa-table-cells",
       resizable: true
     },
-    position: { width: 700, height: 540 },
+    position: { width: 760, height: 560 },
     actions: {
       toggleRecipient: SoundboardApp.#onToggleRecipient,
       clearRecipients: SoundboardApp.#onClearRecipients,
@@ -25,7 +30,9 @@ export class SoundboardApp extends HandlebarsApplicationMixin(ApplicationV2) {
       selectCategory: SoundboardApp.#onSelectCategory,
       triggerSound: SoundboardApp.#onTriggerSound,
       addSound: SoundboardApp.#onAddSound,
-      importFolder: SoundboardApp.#onImportFolder,
+      addWebUrl: SoundboardApp.#onAddWebUrl,
+      setWatchFolder: SoundboardApp.#onSetWatchFolder,
+      rescanWatchFolder: SoundboardApp.#onRescanWatchFolder,
       stopAll: SoundboardApp.#onStopAll
     }
   };
@@ -34,6 +41,24 @@ export class SoundboardApp extends HandlebarsApplicationMixin(ApplicationV2) {
     header: { template: `modules/${MODULE_ID}/templates/target-bar.hbs` },
     grid: { template: `modules/${MODULE_ID}/templates/sound-grid.hbs`, scrollable: [""] }
   };
+
+  async #getMergedSounds() {
+    const watchFolder = (game.settings.get(MODULE_ID, "watchFolder") ?? "").trim();
+    if (watchFolder !== this.#cachedWatchFolder) {
+      this.#cachedWatchFolder = watchFolder;
+      this.#watchedSoundsCache = null;
+      this.#scanPromise = null;
+    }
+    if (watchFolder && this.#watchedSoundsCache === null) {
+      const pending = this.#scanPromise ??= scanSoundboardDirectory(watchFolder);
+      const discovered = await pending;
+      if (this.#cachedWatchFolder === watchFolder && this.#scanPromise === pending) {
+        this.#watchedSoundsCache = discovered;
+      }
+    }
+    const manualSounds = game.settings.get(MODULE_ID, "sounds") ?? [];
+    return [...(watchFolder ? this.#watchedSoundsCache ?? [] : []), ...manualSounds];
+  }
 
   async _prepareContext(options) {
     const activePlayers = game.users
@@ -45,8 +70,12 @@ export class SoundboardApp extends HandlebarsApplicationMixin(ApplicationV2) {
         selected: this.#selectedRecipients.has(u.id)
       }));
 
-    const allSounds = game.settings.get(MODULE_ID, "sounds") ?? [];
+    const allSounds = await this.#getMergedSounds();
     const categories = ["All", ...new Set(allSounds.map(s => s.category || "General"))];
+
+    if (!categories.includes(this.#activeCategory)) {
+      this.#activeCategory = "All";
+    }
 
     const filteredSounds = allSounds.filter(s => {
       const cat = s.category || "General";
@@ -59,6 +88,7 @@ export class SoundboardApp extends HandlebarsApplicationMixin(ApplicationV2) {
       players: activePlayers,
       broadcastAll: this.#selectedRecipients.size === 0,
       includeGMInWhisper: this.#includeGMInWhisper,
+      watchFolder: game.settings.get(MODULE_ID, "watchFolder") || "",
       categories: categories.map(c => ({ name: c, active: c === this.#activeCategory })),
       searchQuery: this.#searchQuery,
       sounds: filteredSounds
@@ -68,39 +98,43 @@ export class SoundboardApp extends HandlebarsApplicationMixin(ApplicationV2) {
   _onRender(context, options) {
     super._onRender(context, options);
 
-    // Search input filtering
     const searchInput = this.element.querySelector(".mb-search-input");
     if (searchInput) {
-      searchInput.addEventListener("input", (event) => {
+      searchInput.oninput = (event) => {
         this.#searchQuery = event.target.value;
         this.render({ parts: ["grid"] });
-      });
+      };
     }
 
-    // Right-click pad to preview locally; Shift+Right-click to delete pad
     const pads = this.element.querySelectorAll(".mb-sound-pad");
     for (const pad of pads) {
-      pad.addEventListener("contextmenu", async (event) => {
+      pad.oncontextmenu = async (event) => {
         event.preventDefault();
         const soundId = pad.dataset.soundId;
-        const sounds = game.settings.get(MODULE_ID, "sounds") ?? [];
-        const sound = sounds.find(s => s.id === soundId);
+        const allSounds = await this.#getMergedSounds();
+        const sound = allSounds.find(s => s.id === soundId);
         if (!sound) return;
 
         if (event.shiftKey) {
-          const updated = sounds.filter(s => s.id !== soundId);
+          if (sound.isWatched) {
+            ui.notifications.warn("MB Soundboard: Watched folder pads are managed by your file system.");
+            return;
+          }
+          const manualSounds = game.settings.get(MODULE_ID, "sounds") ?? [];
+          const updated = manualSounds.filter(s => s.id !== soundId);
           await game.settings.set(MODULE_ID, "sounds", updated);
           this.render({ parts: ["header", "grid"] });
           ui.notifications.info(`MB Soundboard: Removed "${sound.name}".`);
           return;
         }
 
+        const sourceToPlay = sound.isPool && sound.pool?.length ? sound.pool : sound.src;
         ui.notifications.info(`MB Soundboard: Previewing "${sound.name}" locally (GM only).`);
-        await playCue(sound.src, {
+        await playCue(sourceToPlay, {
           volume: sound.volume ?? 0.8,
           localPreviewOnly: true
         });
-      });
+      };
     }
   }
 
@@ -132,8 +166,8 @@ export class SoundboardApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static async #onTriggerSound(event, target) {
     const soundId = target.dataset.soundId;
-    const sounds = game.settings.get(MODULE_ID, "sounds") ?? [];
-    const sound = sounds.find(s => s.id === soundId);
+    const allSounds = await this.#getMergedSounds();
+    const sound = allSounds.find(s => s.id === soundId);
     if (!sound) return;
 
     const recipients = Array.from(this.#selectedRecipients);
@@ -141,7 +175,8 @@ export class SoundboardApp extends HandlebarsApplicationMixin(ApplicationV2) {
       recipients.push(game.user.id);
     }
 
-    await playCue(sound.src, {
+    const sourceToPlay = sound.isPool && sound.pool?.length ? sound.pool : sound.src;
+    await playCue(sourceToPlay, {
       volume: sound.volume ?? 0.8,
       recipients
     });
@@ -160,7 +195,10 @@ export class SoundboardApp extends HandlebarsApplicationMixin(ApplicationV2) {
           name: fileName,
           src: path,
           category,
-          volume: 0.8
+          volume: 0.8,
+          isPool: false,
+          isWatched: false,
+          isWebUrl: false
         });
         await game.settings.set(MODULE_ID, "sounds", sounds);
         this.render({ parts: ["header", "grid"] });
@@ -168,40 +206,39 @@ export class SoundboardApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }).render(true);
   }
 
-  static async #onImportFolder() {
+  static #onAddWebUrl() {
+    new AddUrlDialog({
+      onSaved: () => this.render({ parts: ["header", "grid"] })
+    }).render({ force: true });
+  }
+
+  static async #onSetWatchFolder() {
+    const current = game.settings.get(MODULE_ID, "watchFolder") || "";
     new foundry.applications.apps.FilePicker({
       type: "folder",
+      current,
       callback: async (folderPath) => {
-        const result = await foundry.applications.apps.FilePicker.browse("data", folderPath);
-        const audioExtensions = [".ogg", ".mp3", ".wav", ".webm", ".flac", ".m4a"];
-        const audioFiles = (result.files ?? []).filter(f =>
-          audioExtensions.some(ext => f.toLowerCase().endsWith(ext))
-        );
-
-        if (audioFiles.length === 0) {
-          ui.notifications.warn("MB Soundboard: No audio files found in that folder.");
-          return;
-        }
-
-        const folderName = decodeURIComponent(folderPath.split("/").filter(Boolean).pop() || "Imported");
-        const sounds = foundry.utils.deepClone(game.settings.get(MODULE_ID, "sounds") ?? []);
-
-        for (const file of audioFiles) {
-          const name = decodeURIComponent(file.split("/").pop().replace(/\.[^/.]+$/, "")).replace(/[-_]/g, " ");
-          sounds.push({
-            id: foundry.utils.randomID(),
-            name,
-            src: file,
-            category: folderName,
-            volume: 0.8
-          });
-        }
-
-        await game.settings.set(MODULE_ID, "sounds", sounds);
-        this.render({ parts: ["header", "grid"] });
-        ui.notifications.info(`MB Soundboard: Imported ${audioFiles.length} sounds into "${folderName}".`);
+        folderPath ||= "/";
+        await game.settings.set(MODULE_ID, "watchFolder", folderPath);
+        this.#watchedSoundsCache = null;
+        this.#scanPromise = null;
+        await this.#getMergedSounds();
+        await this.render({ parts: ["header", "grid"] });
+        ui.notifications.info(`MB Soundboard: Synced watch folder "${folderPath}" (${this.#watchedSoundsCache.length} pads).`);
       }
     }).render(true);
+  }
+
+  static async #onRescanWatchFolder() {
+    const watchFolder = game.settings.get(MODULE_ID, "watchFolder") || "";
+    if (!watchFolder) {
+      return SoundboardApp.#onSetWatchFolder.call(this);
+    }
+    this.#watchedSoundsCache = null;
+    this.#scanPromise = null;
+    await this.#getMergedSounds();
+    await this.render({ parts: ["header", "grid"] });
+    ui.notifications.info(`MB Soundboard: Rescanned "${watchFolder}" (${this.#watchedSoundsCache.length} pads).`);
   }
 
   static #onStopAll() {
