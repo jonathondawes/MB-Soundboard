@@ -1,0 +1,130 @@
+@layer modules {
+  .mb-soundboard .window-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .mb-target-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border-dark-5, #444);
+  }
+
+  .mb-target-row,
+  .mb-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .mb-target-pills,
+  .mb-toolbar-actions,
+  .mb-category-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    align-items: center;
+  }
+
+  .mb-pill,
+  .mb-cat-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid #555;
+    background: rgba(0, 0, 0, 0.35);
+    color: #ddd;
+    cursor: pointer;
+    font-size: 0.78rem;
+  }
+
+  .mb-pill.active,
+  .mb-cat-tab.active {
+    background: #2b5c8f;
+    border-color: #63a4ff;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .mb-search-input {
+    max-width: 180px;
+    height: 26px;
+    font-size: 0.8rem;
+  }
+
+  .mb-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .mb-btn.mb-danger {
+    background: #7a1f1f;
+    color: #fff;
+  }
+
+  .mb-sound-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+    gap: 0.6rem;
+  }
+
+  .mb-sound-pad {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    min-height: 86px;
+    padding: 0.5rem;
+    border-radius: 6px;
+    background: linear-gradient(145deg, #2b3548, #1e2533);
+    border: 1px solid #3e4c66;
+    color: #f0f4f8;
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.08s ease, border-color 0.12s ease;
+  }
+
+  .mb-sound-pad:hover {
+    border-color: #79b8ff;
+    transform: translateY(-2px);
+  }
+
+  .mb-sound-pad:active {
+    transform: scale(0.96);
+  }
+
+  .mb-pad-icon {
+    font-size: 1.2rem;
+    opacity: 0.85;
+  }
+
+  .mb-pad-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.15;
+    word-break: break-word;
+  }
+
+  .mb-pad-cat {
+    font-size: 0.65rem;
+    opacity: 0.6;
+  }
+
+  .mb-hype-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.5rem;
+  }
+}

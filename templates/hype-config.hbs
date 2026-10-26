@@ -1,0 +1,40 @@
+<div class="mb-hype-form">
+  <div class="form-group">
+    <label>Enable Hype Track for <strong>{{docName}}</strong></label>
+    <input type="checkbox" name="enabled" {{#if hype.enabled}}checked{{/if}} />
+  </div>
+
+  <div class="form-group">
+    <label>Audio Path (Supports <code>*</code> Wildcards)</label>
+    <div class="form-fields">
+      <input type="text" name="turnStartSrc" value="{{hype.turnStartSrc}}" placeholder="assets/audio/sting-*.ogg" />
+      <button type="button" data-action="browseAudio" title="Browse Audio Files">
+        <i class="fa-solid fa-file-audio"></i>
+      </button>
+      <button type="button" data-action="previewHype" title="Preview Locally">
+        <i class="fa-solid fa-play"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Volume (0.05 - 1.0)</label>
+    <input type="number" name="turnStartVolume" value="{{hype.turnStartVolume}}" min="0.05" max="1.0" step="0.05" />
+  </div>
+
+  {{#if isActor}}
+    <div class="form-group">
+      <label>Combat Trigger Frequency</label>
+      <select name="playMode">
+        <option value="everyTurn" {{#if (eq hype.playMode "everyTurn")}}selected{{/if}}>Every Turn Start</option>
+        <option value="firstTurnOnly" {{#if (eq hype.playMode "firstTurnOnly")}}selected{{/if}}>Round 1 Only (Boss Intro)</option>
+      </select>
+    </div>
+  {{/if}}
+
+  <footer class="form-footer">
+    <button type="submit">
+      <i class="fa-solid fa-floppy-disk"></i> Save Hype Track
+    </button>
+  </footer>
+</div>

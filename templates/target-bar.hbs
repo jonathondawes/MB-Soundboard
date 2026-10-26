@@ -1,0 +1,53 @@
+<header class="mb-target-bar">
+  <div class="mb-target-row">
+    <div class="mb-target-pills">
+      <button type="button"
+              class="mb-pill {{#if broadcastAll}}active{{/if}}"
+              data-action="clearRecipients"
+              title="Play sounds to all connected players">
+        <i class="fa-solid fa-tower-broadcast"></i> All Players
+      </button>
+
+      {{#each players}}
+        <button type="button"
+                class="mb-pill {{#if this.selected}}active{{/if}}"
+                style="--player-color: {{this.color}}"
+                data-action="toggleRecipient"
+                data-user-id="{{this.id}}"
+                title="Whisper audio to {{this.name}}">
+          <span class="mb-dot" style="background: {{this.color}}"></span>
+          {{this.name}}
+        </button>
+      {{/each}}
+    </div>
+
+    <div class="mb-toolbar-actions">
+      <button type="button" class="mb-btn" data-action="addSound" title="Add Single Sound">
+        <i class="fa-solid fa-plus"></i> Add Pad
+      </button>
+      <button type="button" class="mb-btn" data-action="importFolder" title="Import Folder of Audio">
+        <i class="fa-solid fa-folder-open"></i> Import Folder
+      </button>
+      <button type="button" class="mb-btn mb-danger" data-action="stopAll" title="Stop All Active Cues">
+        <i class="fa-solid fa-stop"></i> Stop All
+      </button>
+    </div>
+  </div>
+
+  <div class="mb-filter-row">
+    <div class="mb-category-tabs">
+      {{#each categories}}
+        <button type="button"
+                class="mb-cat-tab {{#if this.active}}active{{/if}}"
+                data-action="selectCategory"
+                data-category="{{this.name}}">
+          {{this.name}}
+        </button>
+      {{/each}}
+    </div>
+    <input type="search"
+           class="mb-search-input"
+           placeholder="Search pads..."
+           value="{{searchQuery}}" />
+  </div>
+</header>
